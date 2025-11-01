@@ -1,12 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Aplicación Express</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Hola desde index.html</h1>
-    <a href="/usuarios">usuarios</a>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  
+  <!-- Hero Section -->
+  <div class="container mx-auto px-4 py-16">
+    <div class="max-w-2xl mx-auto text-center">
+      <h1 class="text-6xl font-bold text-gray-800 mb-6 animate-fade-in">
+        ¡Bienvenido a Mi Aplicación!
+      </h1>
+      <p class="text-2xl text-gray-600 mb-12">
+        Una aplicación Express con Node.js
+      </p>
+      
+      <a href="/usuarios">
+        <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-10 rounded-lg shadow-xl transform transition hover:scale-105 active:scale-95 text-lg">
+          Ver Usuarios →
+        </button>
+      </a>
+    </div>
+  </div>
+
 </body>
 </html>

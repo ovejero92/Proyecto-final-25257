@@ -19,11 +19,15 @@ app.get('/about',(req,res) => {
 })
 
 app.get('/sumar',(req,res) => {
-    // http://localhost:3000/sumar?num1=5&num2=9
-    const numero1 = +req.query.num1
-    const numero2 = +req.query.num2
-    const result = numero1 + numero2
-    res.send({resultado:result})
+    // http://loca lhost:3000/sumar?num1=5&num2=9
+
+    // const num1 =Number(req.query.numero1) // "5" + "9" -> 5 + 9
+    // const num2 = +req.query.numero2
+    res.send(`el resultado es ${+req.query.numero1 + +req.query.numero2}`)
+    // const numero1 = +req.query.num1
+    // const numero2 = +req.query.num2
+    // const result = numero1 + numero2
+    // res.send({resultado:result})
 
 })
 
