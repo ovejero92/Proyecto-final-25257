@@ -5,13 +5,9 @@ import cors from "cors"
 
 const app = express()
 app.use(express.json())
-
 // app.use(express.static("public"))
 app.use(cors())
-
 // app.use((req,res,next) => {res.json({msj:"en mantenimiento"})})
-
-
 app.use(['/users','/usuarios'],usersRouter)
 app.use(['/products','/productos'], productsRouter)
 

@@ -39,12 +39,14 @@ const usuarios = [
     },
   ];
 
-export const findAllUsers = () => {
-    return usuarios.map(u => {
-        const {password, ...rest} = u
-        return rest;
-    });
-};
+// export const findAllUsers = () => {
+//     return usuarios.map(u => {
+//         const {password, ...rest} = u
+//         return rest;
+//     });
+// };
+
+export const findAllUsers = () => {return usuarios.map(({password, ...user}) => user)}
 
 export const findUserById = (id) => {
     const user = usuarios.find(u => u.id === parseInt(id))
@@ -52,4 +54,34 @@ export const findUserById = (id) => {
 
     const {password, ...userData} = user;
     return userData
+}
+
+export const createUser = async (data) => {
+  const {nombre, email, password, rol, ubicacion, experiencia} = data;
+
+  if(!nombre || !email || !password) {
+    throw new Error("Faltan los campos obligatorios (nombre - email - pass)")
+  }
+
+  const existingUser = usuarios.find(u => u.email === email);
+  if(existingUser) {
+    throw new Error("EL correo ya existe ");
+  }
+
+  const hash = await bcrypt.hash(password, 10);
+  
+  const newUser = {
+    id: usuarios.length + 1,
+    nombre,
+    email,
+    password:hash,
+    rol: rol || "sin asignar",
+    ubicacion: ubicacion || "Desconocida",
+    experiencia: experiencia || "Sin experiencia"
+  }
+
+  usuarios.push(newUser);
+
+  const {password: _ , ...user} = newUser
+  return user
 }

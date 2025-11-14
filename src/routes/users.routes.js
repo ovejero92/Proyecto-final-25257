@@ -1,6 +1,4 @@
-import { Router } from "express";
 
-const router = Router()
 
 // router.get('/',(req,res) => {
 //       const tarjetasHTML = usuarios.map(usuario => `
@@ -111,11 +109,14 @@ const router = Router()
 // router.delete('/',(req,res) => {
 //     res.send('hola desde delete')
 // })
-import {getAllUsers , getUserById} from "../controller/users.controller.js"
+import { Router } from "express";
 
-router.get('/', getAllUsers)
-router.get('/:id',getUserById)
+const router = Router()
+import {getAllUsers , getUserById , createUserController} from "../controller/users.controller.js"
 
+router.get('/', getAllUsers);
+router.get('/:id',getUserById);
+router.post('/', createUserController);
 
 
 export default router
