@@ -1,0 +1,34 @@
+[
+    { 
+      "id": 1, 
+      "nombre": "Ana García",
+      "email": "ana.garcia@email.com",
+      "rol": "Desarrolladora Frontend",
+      "ubicacion": "Buenos Aires, Argentina",
+      "experiencia": "3 años"
+    },
+    { 
+      "id": 2, 
+      "nombre": "Luis Martínez",
+      "email": "luis.martinez@email.com",
+      "rol": "Backend Developer",
+      "ubicacion": "Córdoba, Argentina",
+      "experiencia": "5 años"
+    },
+    { 
+      "id": 3, 
+      "nombre": "Carla Rodríguez",
+      "email": "carla.rodriguez@email.com",
+      "rol": "Full Stack Developer",
+      "ubicacion": "Rosario, Argentina",
+      "experiencia": "4 años"
+    },
+    { 
+      "id": 4, 
+      "nombre": "Pedro Gómez",
+      "email": "pedro.gomez@email.com",
+      "rol": "DevOps Engineer",
+      "ubicacion": "Mendoza, Argentina",
+      "experiencia": "6 años"
+    }
+  ]

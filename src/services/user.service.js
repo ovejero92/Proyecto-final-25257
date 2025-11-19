@@ -1,43 +1,44 @@
 import bcrypt from 'bcryptjs';
+import { leerBD, guardarDB } from '../models/user.model';
 
-const usuarios = [
-    { 
-      id: 1, 
-      nombre: 'Ana García',
-      email: 'ana.garcia@email.com',
-      password:bcrypt.hashSync("1234",10),
-      rol: 'Desarrolladora Frontend',
-      ubicacion: 'Buenos Aires, Argentina',
-      experiencia: '3 años'
-    },
-    { 
-      id: 2, 
-      nombre: 'Luis Martínez',
-      email: 'luis.martinez@email.com',
-      password:bcrypt.hashSync("1234",10),
-      rol: 'Backend Developer',
-      ubicacion: 'Córdoba, Argentina',
-      experiencia: '5 años'
-    },
-    { 
-      id: 3, 
-      nombre: 'Carla Rodríguez',
-      email: 'carla.rodriguez@email.com',
-      password:bcrypt.hashSync("1234",10),
-      rol: 'Full Stack Developer',
-      ubicacion: 'Rosario, Argentina',
-      experiencia: '4 años'
-    },
-    { 
-      id: 4, 
-      nombre: 'Pedro Gómez',
-      email: 'pedro.gomez@email.com',
-      password:bcrypt.hashSync("1234",10),
-      rol: 'DevOps Engineer',
-      ubicacion: 'Mendoza, Argentina',
-      experiencia: '6 años'
-    },
-  ];
+// const usuarios = [
+//     { 
+//       id: 1, 
+//       nombre: 'Ana García',
+//       email: 'ana.garcia@email.com',
+//       password:bcrypt.hashSync("1234",10),
+//       rol: 'Desarrolladora Frontend',
+//       ubicacion: 'Buenos Aires, Argentina',
+//       experiencia: '3 años'
+//     },
+//     { 
+//       id: 2, 
+//       nombre: 'Luis Martínez',
+//       email: 'luis.martinez@email.com',
+//       password:bcrypt.hashSync("1234",10),
+//       rol: 'Backend Developer',
+//       ubicacion: 'Córdoba, Argentina',
+//       experiencia: '5 años'
+//     },
+//     { 
+//       id: 3, 
+//       nombre: 'Carla Rodríguez',
+//       email: 'carla.rodriguez@email.com',
+//       password:bcrypt.hashSync("1234",10),
+//       rol: 'Full Stack Developer',
+//       ubicacion: 'Rosario, Argentina',
+//       experiencia: '4 años'
+//     },
+//     { 
+//       id: 4, 
+//       nombre: 'Pedro Gómez',
+//       email: 'pedro.gomez@email.com',
+//       password:bcrypt.hashSync("1234",10),
+//       rol: 'DevOps Engineer',
+//       ubicacion: 'Mendoza, Argentina',
+//       experiencia: '6 años'
+//     },
+//   ];
 
 // export const findAllUsers = () => {
 //     return usuarios.map(u => {
@@ -46,8 +47,8 @@ const usuarios = [
 //     });
 // };
 
-export const findAllUsers = () => {return usuarios.map(({password, ...user}) => user)}
-
+export const findAllUsers = () => {return leerBD()}
+ 
 export const findUserById = (id) => {
     const user = usuarios.find(u => u.id === parseInt(id))
     if(!user) return null;
@@ -84,4 +85,15 @@ export const createUser = async (data) => {
 
   const {password: _ , ...user} = newUser
   return user
+}
+
+export const VerifyCredentials = async (email, password) => {
+  const user = usuarios.find(u => u.email === email);
+  if(!user) throw new Error("Mail no registrado");
+
+  const valid = await bcrypt.compare(password, user.password);
+  if(!valid) throw new Error("Contraseña incorrecta!");
+
+  const {password: _, ...safeUser} = user
+  return safeUser
 }
