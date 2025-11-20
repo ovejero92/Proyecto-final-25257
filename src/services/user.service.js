@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
-import { leerBD, guardarDB } from '../models/user.model';
+import { leerBD, guardarDB } from '../db/db.js';
 
+
+const ruta = "usuarios";
 // const usuarios = [
 //     { 
 //       id: 1, 
@@ -47,10 +49,17 @@ import { leerBD, guardarDB } from '../models/user.model';
 //     });
 // };
 
-export const findAllUsers = () => {return leerBD()}
+export const findAllUsers = () => {
+  const bd = leerBD()
+  const users = bd[ruta] || []
+  return users.map(({password, ...u})=> u)
+}
  
 export const findUserById = (id) => {
-    const user = usuarios.find(u => u.id === parseInt(id))
+    const bd = leerBD()
+    const users = bd[ruta] || []
+
+    const user = users.find(u => u.id === parseInt(id))
     if(!user) return null;
 
     const {password, ...userData} = user;
@@ -60,19 +69,21 @@ export const findUserById = (id) => {
 export const createUser = async (data) => {
   const {nombre, email, password, rol, ubicacion, experiencia} = data;
 
+  const bd = leerBD()
+  const users = bd[ruta] || []
+
   if(!nombre || !email || !password) {
     throw new Error("Faltan los campos obligatorios (nombre - email - pass)")
   }
 
-  const existingUser = usuarios.find(u => u.email === email);
-  if(existingUser) {
-    throw new Error("EL correo ya existe ");
+  if(users.some((u) => {u.email === email})) {
+    throw new Error("El correo ya existe")
   }
 
   const hash = await bcrypt.hash(password, 10);
   
   const newUser = {
-    id: usuarios.length + 1,
+    id: users.length ? (users[users.length - 1].id + 1 ) : 1,
     nombre,
     email,
     password:hash,
@@ -81,14 +92,51 @@ export const createUser = async (data) => {
     experiencia: experiencia || "Sin experiencia"
   }
 
-  usuarios.push(newUser);
+  users.push(newUser);
+
+  bd[ruta] = users
+  guardarDB(bd)
 
   const {password: _ , ...user} = newUser
   return user
 }
 
+export const updateUser = async (id,data) => {
+  const bd = leerBD()
+  const users = bd[ruta] || []
+
+  const index = users.findIndex(u => u.id === Number(id))
+  if(index === -1) return null;
+  
+  let newPassword = users[index].password;
+  if(data.password ){
+    newPassword = await bcrypt.hash(data.password,10)
+  }
+
+  const updated = {
+    id: users[index].id,
+    nombre: data.nombre || users[index].nombre,
+    email: data.email || users[index].email,
+    password:newPassword,
+    rol: data.rol || users[index].rol,
+    ubicacion:data.ubicacion || users[index].ubicacion,
+    experiencia: data.experiencia || users[index].experiencia
+  }
+
+  users[index]= updated
+
+  db[ruta] = users;
+  guardarDB(db);
+
+  const {password, ...safeUser} = updated;
+  return safeUser
+}
+
 export const VerifyCredentials = async (email, password) => {
-  const user = usuarios.find(u => u.email === email);
+  const bd = leerBD()
+  const users = bd[ruta] || []
+
+  const user = users.find(u => u.email === email);
   if(!user) throw new Error("Mail no registrado");
 
   const valid = await bcrypt.compare(password, user.password);

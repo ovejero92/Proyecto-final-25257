@@ -110,7 +110,7 @@
 //     res.send('hola desde delete')
 // })
 import { Router } from "express";
-import {getAllUsers , getUserById , createUserController, loginUser} from "../controller/users.controller.js"
+import {getAllUsers , getUserById , createUserController, loginUser, updateUserController} from "../controller/users.controller.js"
 
 const router = Router()
 
@@ -118,6 +118,8 @@ router.get('/', getAllUsers); //
 router.get('/:id',getUserById);
 router.post('/', createUserController);
 router.post('/login',loginUser)
+
+router.put('/:id', updateUserController);
 
 
 export default router
