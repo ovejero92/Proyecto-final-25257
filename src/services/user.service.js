@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { leerBD, guardarDB } from '../db/db.js';
-
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config.js';
+import { UserModel } from '../models/user.model.js';
 
 const ruta = "usuarios";
 // const usuarios = [
@@ -49,10 +51,16 @@ const ruta = "usuarios";
 //     });
 // };
 
-export const findAllUsers = () => {
-  const bd = leerBD()
-  const users = bd[ruta] || []
-  return users.map(({password, ...u})=> u)
+export const findAllUsers = async () => {
+  // const bd = leerBD()
+  // const users = bd[ruta] || []
+  // return users.map(({password, ...u})=> u)
+  const snapshot = await getDocs(collection(db,ruta))
+  return snapshot.docs.map(d => {
+    const {password, ...u} = d.data();
+    //return {id:doc.id, ...u}
+    return new UserModel({id:doc.id, ...u})
+  })
 }
  
 export const findUserById = (id) => {
@@ -69,8 +77,8 @@ export const findUserById = (id) => {
 export const createUser = async (data) => {
   const {nombre, email, password, rol, ubicacion, experiencia} = data;
 
-  const bd = leerBD()
-  const users = bd[ruta] || []
+  const db = leerBD()
+  const users = db[ruta] || []
 
   if(!nombre || !email || !password) {
     throw new Error("Faltan los campos obligatorios (nombre - email - pass)")
@@ -94,16 +102,16 @@ export const createUser = async (data) => {
 
   users.push(newUser);
 
-  bd[ruta] = users
-  guardarDB(bd)
+  db[ruta] = users
+  guardarDB(db)
 
   const {password: _ , ...user} = newUser
   return user
 }
 
 export const updateUser = async (id,data) => {
-  const bd = leerBD()
-  const users = bd[ruta] || []
+  const db = leerBD()
+  const users = db[ruta] || []
 
   const index = users.findIndex(u => u.id === Number(id))
   if(index === -1) return null;
@@ -133,8 +141,8 @@ export const updateUser = async (id,data) => {
 }
 
 export const VerifyCredentials = async (email, password) => {
-  const bd = leerBD()
-  const users = bd[ruta] || []
+  const db = leerBD()
+  const users = db[ruta] || []
 
   const user = users.find(u => u.email === email);
   if(!user) throw new Error("Mail no registrado");
@@ -145,3 +153,4 @@ export const VerifyCredentials = async (email, password) => {
   const {password: _, ...safeUser} = user
   return safeUser
 }
+
