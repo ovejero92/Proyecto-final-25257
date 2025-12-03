@@ -1,55 +1,10 @@
 import bcrypt from 'bcryptjs';
-import { leerBD, guardarDB } from '../db/db.js';
-import { collection, getDocs } from 'firebase/firestore';
+// import { leerBD, guardarDB } from '../db/db.js';
+import { collection, getDocs, addDoc, getDoc, query, where, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 import { UserModel } from '../models/user.model.js';
 
 const ruta = "usuarios";
-// const usuarios = [
-//     { 
-//       id: 1, 
-//       nombre: 'Ana García',
-//       email: 'ana.garcia@email.com',
-//       password:bcrypt.hashSync("1234",10),
-//       rol: 'Desarrolladora Frontend',
-//       ubicacion: 'Buenos Aires, Argentina',
-//       experiencia: '3 años'
-//     },
-//     { 
-//       id: 2, 
-//       nombre: 'Luis Martínez',
-//       email: 'luis.martinez@email.com',
-//       password:bcrypt.hashSync("1234",10),
-//       rol: 'Backend Developer',
-//       ubicacion: 'Córdoba, Argentina',
-//       experiencia: '5 años'
-//     },
-//     { 
-//       id: 3, 
-//       nombre: 'Carla Rodríguez',
-//       email: 'carla.rodriguez@email.com',
-//       password:bcrypt.hashSync("1234",10),
-//       rol: 'Full Stack Developer',
-//       ubicacion: 'Rosario, Argentina',
-//       experiencia: '4 años'
-//     },
-//     { 
-//       id: 4, 
-//       nombre: 'Pedro Gómez',
-//       email: 'pedro.gomez@email.com',
-//       password:bcrypt.hashSync("1234",10),
-//       rol: 'DevOps Engineer',
-//       ubicacion: 'Mendoza, Argentina',
-//       experiencia: '6 años'
-//     },
-//   ];
-
-// export const findAllUsers = () => {
-//     return usuarios.map(u => {
-//         const {password, ...rest} = u
-//         return rest;
-//     });
-// };
 
 export const findAllUsers = async () => {
   // const bd = leerBD()
@@ -63,94 +18,110 @@ export const findAllUsers = async () => {
   })
 }
  
-export const findUserById = (id) => {
-    const bd = leerBD()
-    const users = bd[ruta] || []
+export const findUserById = async (id) => {
+    const ref = doc(db,ruta,id)
+    const snap = await getDoc(ref)
 
-    const user = users.find(u => u.id === parseInt(id))
-    if(!user) return null;
+    if(!snap.exists()) return null;
 
-    const {password, ...userData} = user;
-    return userData
+    const {password, ...userData} = snap.data();
+    return new UserModel({id: snap.id, ...userData});
 }
 
-export const createUser = async (data) => {
-  const {nombre, email, password, rol, ubicacion, experiencia} = data;
+export async function createUser(data) {
+  const { nombre, email, password, rol, ubicacion, experiencia } = data;
 
-  const db = leerBD()
-  const users = db[ruta] || []
-
-  if(!nombre || !email || !password) {
-    throw new Error("Faltan los campos obligatorios (nombre - email - pass)")
+  if (!email || !password) {
+    throw new Error("Email y contraseña son obligatorios");
   }
 
-  if(users.some((u) => {u.email === email})) {
-    throw new Error("El correo ya existe")
+  const q = query(
+    collection(db, ruta),
+    where("email", "==", email)
+  );
+
+  const existing = await getDocs(q);
+  if (!existing.empty) {
+    throw new Error("El correo electrónico ya está registrado");
   }
 
-  const hash = await bcrypt.hash(password, 10);
-  
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   const newUser = {
-    id: users.length ? (users[users.length - 1].id + 1 ) : 1,
     nombre,
     email,
-    password:hash,
-    rol: rol || "sin asignar",
+    password: hashedPassword,
+    rol: rol || "Sin rol",
     ubicacion: ubicacion || "Desconocida",
     experiencia: experiencia || "Sin experiencia"
-  }
+  };
 
-  users.push(newUser);
+  const ref = await addDoc(collection(db, ruta), newUser);
 
-  db[ruta] = users
-  guardarDB(db)
-
-  const {password: _ , ...user} = newUser
-  return user
+  const { password: _, ...safeUser } = newUser;
+  return new UserModel({ id: ref.id, ...safeUser });
 }
 
 export const updateUser = async (id,data) => {
-  const db = leerBD()
-  const users = db[ruta] || []
+ const ref = doc(db, ruta, id);
+  const snap = await getDoc(ref);
 
-  const index = users.findIndex(u => u.id === Number(id))
-  if(index === -1) return null;
-  
-  let newPassword = users[index].password;
-  if(data.password ){
-    newPassword = await bcrypt.hash(data.password,10)
+  if (!snap.exists()) return null;
+
+  const old = snap.data();
+
+  let newPassword = old.password;
+  if (data.password) {
+    newPassword = await bcrypt.hash(data.password, 10);
   }
 
   const updated = {
-    id: users[index].id,
-    nombre: data.nombre || users[index].nombre,
-    email: data.email || users[index].email,
-    password:newPassword,
-    rol: data.rol || users[index].rol,
-    ubicacion:data.ubicacion || users[index].ubicacion,
-    experiencia: data.experiencia || users[index].experiencia
-  }
+    nombre: data.nombre || old.nombre,
+    email: data.email || old.email,
+    password: newPassword,
+    rol: data.rol || old.rol,
+    ubicacion: data.ubicacion || old.ubicacion,
+    experiencia: data.experiencia || old.experiencia
+  };
 
-  users[index]= updated
+  await updateDoc(ref, updated);
 
-  db[ruta] = users;
-  guardarDB(db);
-
-  const {password, ...safeUser} = updated;
-  return safeUser
+  const { password, ...safeUser } = updated;
+  return { id, ...safeUser };
 }
 
+export async function deleteUser(id) {
+  const ref = doc(db, ruta, id);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return null;
+
+  const user = snap.data();
+
+  await deleteDoc(ref);
+
+  const { password, ...safeUser } = user;
+  return { id, ...safeUser };
+}
+
+
 export const VerifyCredentials = async (email, password) => {
-  const db = leerBD()
-  const users = db[ruta] || []
+  const q = query(
+    collection(db,ruta),
+    where("email", "==" , email)
+  );
+  const snap = await getDocs(q)
 
-  const user = users.find(u => u.email === email);
-  if(!user) throw new Error("Mail no registrado");
+  if(snap.empty) throw new Error("Usuario no encontrado")
 
-  const valid = await bcrypt.compare(password, user.password);
-  if(!valid) throw new Error("Contraseña incorrecta!");
+  const userDoc = snap.docs[0];
+  const user = userDoc.data();
 
-  const {password: _, ...safeUser} = user
-  return safeUser
+  const valid = await bcrypt.compare(password, user.password)
+
+  if(!valid) throw new Error("La contraseña es incorrecta")
+
+  const {password: _ , ...userSafe} = user
+  return {id: userDoc.id, ...userSafe}
 }
 
