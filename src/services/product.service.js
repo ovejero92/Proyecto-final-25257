@@ -33,7 +33,8 @@ export const createProduct = async (data) => {
         precio: Number(data.precio),
         stock: Number(data.stock || 0),
         descripcion: data.descripcion || "",
-        categoria: data.categoria || ""
+        categoria: data.categoria || "",
+        img: data.img || "https://placehold.co/600x400?text=Sin+Imagen"
     })
     return new ProductModel({id: docRef.id , ...data});
 }
